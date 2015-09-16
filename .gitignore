@@ -40,6 +40,16 @@ Thumbs.db
 ##########
 /node_modules
 
-# JS #
-######
-/js
+# GULP #
+########
+gulpfile.js
+
+# Coffee #
+##########
+*.coffee
+/_coffee
+
+# uncompressed #
+################
+/javascript
+

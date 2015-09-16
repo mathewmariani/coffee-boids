@@ -3,6 +3,8 @@
 
 <head>
     <title>Boids</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+
     <style>
         body {
             width: 100%;
@@ -11,23 +13,52 @@
             padding: 0;
         }
 
+        .overlay {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            margin: 8px;
+            padding: 0;
+            color: #fff;
+        }
+
+        .compress {
+            margin: 0px;
+            padding 0px;
+        }
+
         #canvas {
             background-color: #333333;
+        }
+
+        a:link {
+            color: #fff;
+        }
+
+        a:hover {
+            color: #7D7D7D;
         }
     </style>
 </head>
 
 <body>
     <canvas id='canvas' style='display: block;'></canvas>
+    <div class='overlay'>
+        <a href="https://github.com/nonsane/coffee-boids">
+            <h1 class='compress'>
+                <span class="glyphicon glyphicon-info-sign"></span>
+            </h1>
+        </a>
+    </div>
 </body>
 
 </html>
 
 <!-- CORE LOGIC -->
-<script src="js/vector2.js"></script>
+<script src="js/vector2.min.js"></script>
 
 <!-- GAME LOGIC -->
-<script src="js/boid.js"></script>
+<script src="js/boid.min.js"></script>
 
 <!-- ENTRY POINT -->
-<script src="js/main.js"></script>
+<script src="js/main.min.js"></script>

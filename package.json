@@ -1,6 +1,0 @@
-{
-    "dependencies": {
-        "gulp": "3.9.*",
-        "gulp-coffee": "*",
-    }
-}
