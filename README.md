@@ -14,4 +14,4 @@ Please visit [Craig Reynolds'](http://www.red3d.com/cwr/boids/) article for more
 ## Usage
 
 If you would like to run the demo (index.html) you will need to first compile all the coffeescript files into javascript files.
-Running the default gulp task is sufficient enought to set up everything.
+Inside the directory run 'gulp' (the default task) to compile all the scripts and set up everything.
