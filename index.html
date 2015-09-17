@@ -2,8 +2,10 @@
 <html>
 
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
     <title>Boids</title>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
 
     <style>
         body {
@@ -11,7 +13,16 @@
             height: 100%;
             margin: 0;
             padding: 0;
+
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            font-size: 125%;
+            font-weight: 300;
         }
+
+        canvas {
+            background-color: #333333;
+        }
+
 
         .overlay {
             position: absolute;
@@ -20,18 +31,14 @@
             margin: 8px;
             padding: 0;
             color: #fff;
+
+            display: flex;
+            flex-grow: 1;
+            flex-direction: row;
+            align-items: center;
         }
 
-        .compress {
-            margin: 0px;
-            padding 0px;
-        }
-
-        #canvas {
-            background-color: #333333;
-        }
-
-        a:link {
+        a, a:link {
             color: #fff;
         }
 
@@ -45,10 +52,9 @@
     <canvas id='canvas' style='display: block;'></canvas>
     <div class='overlay'>
         <a href="https://github.com/nonsane/coffee-boids">
-            <h1 class='compress'>
-                <span class="glyphicon glyphicon-info-sign"></span>
-            </h1>
+            <i class="fa fa-github fa-2x"></i>
         </a>
+        <p style='margin: 0 0 0 8px; padding 0px;'>Click/Touch to add Boids</p>
     </div>
 </body>
 
