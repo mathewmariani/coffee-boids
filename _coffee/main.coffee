@@ -2,19 +2,38 @@
 canvas = document.getElementById('canvas')
 context = canvas.getContext('2d')
 
-canvas.width = window.innerWidth
-canvas.height = window.innerHeight
+window.addEventListener('orientationchange', (->
+    resizeCanvas()
+    return
+), false)
+
+window.addEventListener('resize', (->
+    resizeCanvas()
+    return
+), false)
+
+
+resizeCanvas = () ->
+    canvas.width = window.innerWidth
+    canvas.height = window.innerHeight
+    return
 
 # request animation frame
-raf = window.requestAnimationFrame or window.webkitRequestAnimationFrame or window.mozRequestAnimationFrame
+raf = window.requestAnimationFrame or
+    window.webkitRequestAnimationFrame or
+    window.mozRequestAnimationFrame or
+    window.oRequestAnimationFrame or
+    window.msRequestAnimationFrame or
+    (callback) ->
+        window.setTimeout(callback, 1000/fps)
+        return
 
-# game specific
-fps = 60
+fps = 30
 flock = []
 
 start = () ->
     # initialize all boids
-    for i in [0..99]
+    for i in [0..50]
         x = Math.floor((Math.random() * canvas.width) + 1)
         y = Math.floor((Math.random() * canvas.height) + 1)
         flock[i] = new Boid(x, y)
@@ -22,9 +41,6 @@ start = () ->
     drawnSinceLastUpdate = true;
 
     tick = setInterval(->
-        # clear screen
-        context.clearRect(0, 0, canvas.width, canvas.height)
-
         # logic
         for boid in flock
             boid.tick()
@@ -35,6 +51,7 @@ start = () ->
 
     draw = () ->
         if not drawnSinceLastUpdate
+            context.clearRect(0, 0, canvas.width, canvas.height)
             drawnSinceLastUpdate = true
             for boid in flock
                 boid.render()
@@ -52,6 +69,7 @@ canvas.addEventListener('click', ((event) ->
 
 # start immediately
 setTimeout(->
+    resizeCanvas()
     start()
     return
 , 0)

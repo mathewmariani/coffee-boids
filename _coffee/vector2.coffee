@@ -1,7 +1,7 @@
 # vector2 class
 class Vector2
     # Class methods for nondestructively operating
-    for name in ['add', 'subtract', 'multiply', 'divide']
+    for name in ['add', 'subtract', 'multiply', 'divide', 'distance']
         do (name) ->
             Vector2[name] = (vec1, vec2) ->
                 vec1.copy()[name](vec2)

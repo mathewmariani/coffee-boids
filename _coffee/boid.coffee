@@ -1,7 +1,7 @@
 class Boid
     constructor: (x, y) ->
         # constants
-        @radius = 10
+        @radius = 8
         @maxspeed = 3
         @maxforce = 0.05
 
@@ -65,6 +65,9 @@ class Boid
         count = 0
 
         for b in flock
+            if b is this
+                continue
+
             dist = @position.distance(b.position)
             if dist > 0 and dist < @sep_dist
                 diff = Vector2.subtract(@position, b.position)
@@ -91,7 +94,10 @@ class Boid
         count = 0
 
         for b in flock
-            dist = @position.distance(b.position)
+            if b is this
+                continue
+
+            dist = Vector2.distance(@position, b.position)
             if dist > 0 and dist < @ali_dist
                 mean.add(b.velocity)
                 count++
@@ -107,13 +113,15 @@ class Boid
         else
             new Vector2()
 
-    # Cohesion: steer to move toward the average position of local flockmates
     cohesion: () ->
         mean = new Vector2()
         count = 0
 
         for b in flock
-            dist = @position.distance(b.position)
+            if b is this
+                continue
+
+            dist = Vector2.distance(@position, b.position)
             if dist > 0 and dist < @coh_dist
                 mean.add(b.position)
                 count++
@@ -125,13 +133,18 @@ class Boid
 
     seek: (target) ->
         desired = Vector2.subtract(target, @position)
-        desired.normalize
 
-        desired.multiply(@maxspeed)
-        steer = desired.subtract(@velocity)
-        steer.clamp(@maxforce)
+        if desired.magnitude() > 0
+            desired.normalize()
+            desired.multiply(@maxspeed)
 
-        steer
+            steer = Vector2.subtract(desired, @velocity)
+            steer.clamp(@maxforce)
+        else
+            steer = new Vector2()
+
+        return steer;
+
 
     # check for screen wrapping
     wrap: () ->
