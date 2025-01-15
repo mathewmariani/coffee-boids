@@ -1,46 +1,15 @@
-# Compiled source #
-###################
-*.com
-*.class
-*.dll
-*.exe
-*.o
-*.so
+# visual studio project file
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
 
-# Packages #
-############
-*.7z
-*.dmg
-*.gz
-*.iso
-*.jar
-*.rar
-*.tar
-*.zip
+# build output
+js/
+website/
 
-# Logs and databases #
-######################
-*.log
-*.sql
-*.sqlite
+# Dependency directories
+node_modules/
 
-# OS generated files #
-######################
+# macOS
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-Icon?
-ehthumbs.db
-Thumbs.db
-.sass-cache
-
-# NodeJS #
-##########
-/node_modules
-
-# JS #
-######
-/js
-/javascript
