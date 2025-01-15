@@ -1,12 +1,19 @@
-# vector2 class
 class Vector2
     # Class methods for nondestructively operating
-    for name in ['add', 'subtract', 'multiply', 'divide', 'distance']
-        do (name) ->
-            Vector2[name] = (vec1, vec2) ->
-                vec1.copy()[name](vec2)
+    for name in ['add', 'subtract', 'multiply', 'divide', 'scale']
+        Vector2[name] = (vec1, vec2) ->
+            vec1.copy()[name](vec2)
 
-    constructor: (x=0,y=0) ->
+    # Static distance methods
+    Vector2.sqrDistance = (vec1, vec2) ->
+        dx = vec1.x - vec2.x
+        dy = vec1.y - vec2.y
+        dx * dx + dy * dy
+
+    Vector2.distance = (vec1, vec2) ->
+        Math.sqrt(Vector2.sqrDistance(vec1, vec2))
+
+    constructor: (x=0, y=0) ->
         @x = x
         @y = y
 
@@ -14,20 +21,22 @@ class Vector2
         new Vector2(@x, @y)
 
     magnitude: ->
-        Math.sqrt(@x*@x + @y*@y)
+        Math.sqrt(@x * @x + @y * @y)
 
     normalize: ->
         m = @magnitude()
         if m > 0
             @divide(m)
+        else
+            @x = 0
+            @y = 0
         this
 
     clamp: (max) ->
         if @magnitude() > max
             @normalize()
             @multiply(max)
-        else
-            this
+        this
 
     add: (other) ->
         @x += other.x
@@ -45,8 +54,9 @@ class Vector2
         this
 
     divide: (c) ->
-        @x /= c
-        @y /= c
+        if c != 0
+            @x /= c
+            @y /= c
         this
 
     scale: (other) ->
@@ -54,9 +64,10 @@ class Vector2
         @y *= other.y
         this
 
+    sqrDistance: (other) ->
+        Vector2.sqrDistance(this, other)
+
     distance: (other) ->
-        dx = Math.abs(@x - other.x)
-        dy = Math.abs(@y - other.y)
+        Vector2.distance(this, other)
 
-        Math.sqrt(dx*dx + dy*dy)
-
+export default Vector2

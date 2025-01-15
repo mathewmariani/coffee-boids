@@ -1,6 +1,6 @@
 {
     "scripts": {
-        "build": "coffee -c -o js _coffee"
+        "build": "coffee -c -o website/js _coffee"
     },
     "devDependencies": {
         "coffeescript": "^2.7.0"

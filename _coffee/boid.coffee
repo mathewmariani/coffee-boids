@@ -1,19 +1,39 @@
+import Vector2 from './vector2.js'
+
 class Boid
+    # static variable
+    @all = []
+
     constructor: (x, y) ->
         # constants
-        @radius = 8
-        @maxspeed = 3
-        @maxforce = 0.05
+        @size = 8
+        @radius = 32
+        @radius2 = @radius * 2
+        @max_acceleration = 10
+        @max_speed = 120
 
         # distance constants
-        @sep_dist = 25
+        @sep_dist = 24
         @ali_dist = 50
         @coh_dist = 50
 
+        dx = Math.random() * 2 - 1
+        dy = Math.random() * 2 - 1
+
         @position = new Vector2(x, y)
-        @acceleration = new Vector2()
-        @velocity = new Vector2(Math.random(), Math.random())
-        @velocity.multiply(@maxspeed)
+        @acceleration = new Vector2(0, 0)
+        @velocity = new Vector2(dx, dy)
+        @velocity.multiply(@max_speed)
+
+        Boid.all.push(this)
+
+    getNeighborhood: ->
+        neighborhood = []
+        for b in Boid.all
+            continue if b is this
+            if @position.sqrDistance(b.position) <= @radius2
+                neighborhood.push(b)
+        neighborhood
 
     tick: () ->
         @flock()
@@ -21,144 +41,75 @@ class Boid
         @wrap()
         return
 
-    addForce: (force) ->
+    applyForce: (force) ->
         @acceleration.add(force)
         return
 
     update: () ->
-        @velocity.add(@acceleration);
-        @velocity.clamp(@maxspeed)
-        @position.add(@velocity);
-        @acceleration.multiply(0);
+        if @acceleration.magnitude() > @max_acceleration
+            @acceleration.normalize().multiply(@max_acceleration)
+
+        # Integration step
+        @velocity.add(@acceleration).normalize().multiply(@max_speed).multiply(0.01667)
+        @position.add(@velocity)
         return
 
-    render: () ->
-        context.beginPath()
-        context.arc(@position.x, @position.y, @radius, 0, 2 * Math.PI, false)
-        context.fillStyle = 'rgba(162, 162, 162, 0.25)'
-        context.fill()
-        context.lineWidth = 0.8
-        context.strokeStyle = '#F0F2F3'
-        context.stroke()
+    render: (ctx) ->
+        ctx.beginPath()
+        ctx.arc(@position.x, @position.y, @size, 0, 2 * Math.PI, false)
+        ctx.fillStyle = 'rgba(162, 162, 162, 0.25)'
+        ctx.fill()
+        ctx.lineWidth = 0.8
+        ctx.strokeStyle = '#F0F2F3'
+        ctx.stroke()
         return
 
     flock: () ->
-        # get vector forces
-        sep = @seperation()
-        ali = @alignment()
-        coh = @cohesion()
-
-        # apply constants
-        sep.multiply(2.5)
-        ali.multiply(1.0)
-        coh.multiply(1.0)
-
-        # add forces
-        @addForce(sep)
-        @addForce(ali)
-        @addForce(coh)
+        neighborhood = @getNeighborhood(this)
+        @applyForce(@seperation(neighborhood).multiply(4.75))
+        @applyForce(@alignment(neighborhood).multiply(2.90))
+        @applyForce(@cohesion(neighborhood).multiply(4.25))
         return
 
-    # Separation: steer to avoid crowding local flockmates
-    seperation: () ->
-        mean = new Vector2()
+    seperation: (neighborhood) ->
+        if neighborhood.length == 0
+            return new Vector2(0, 0)
+
         count = 0
+        average_position = new Vector2(0, 0)
 
-        for b in flock
-            if b is this
-                continue
-
-            dist = @position.distance(b.position)
-            if dist > 0 and dist < @sep_dist
-                diff = Vector2.subtract(@position, b.position)
-
-                mean.normalize()
-                mean.divide(dist)
-                mean.add(diff)
+        for n in neighborhood
+            if Vector2.distance(@position, n.position) < @sep_dist
+                average_position.add(n.position)
                 count++
 
-        if count > 0
-            mean.divide(count)
+        if count == 0
+            return new Vector2(0, 0)
 
-        if mean.magnitude() > 0
-            mean.normalize()
-            mean.multiply(@maxspeed)
-            mean.subtract(@velocity)
-            mean.clamp(@maxforce)
+        average_position.divide(count)
+        Vector2.subtract(average_position, @position).normalize()
 
-        mean
+    alignment: (neighborhood) ->
+        new Vector2(0, 0)
 
-    # Alignment: steer towards the average heading of local flockmates
-    alignment: () ->
-        mean = new Vector2()
-        count = 0
-
-        for b in flock
-            if b is this
-                continue
-
-            dist = Vector2.distance(@position, b.position)
-            if dist > 0 and dist < @ali_dist
-                mean.add(b.velocity)
-                count++
-
-        if count > 0
-            mean.divide(count)
-            mean.normalize()
-            mean.multiply(@maxspeed)
-
-            steer = Vector2.subtract(mean, @velocity)
-            steer.clamp(@maxforce)
-            steer
-        else
-            new Vector2()
-
-    cohesion: () ->
-        mean = new Vector2()
-        count = 0
-
-        for b in flock
-            if b is this
-                continue
-
-            dist = Vector2.distance(@position, b.position)
-            if dist > 0 and dist < @coh_dist
-                mean.add(b.position)
-                count++
-
-        if count > 0
-            @seek(mean.divide(count))
-        else
-            new Vector2()
-
-    seek: (target) ->
-        desired = Vector2.subtract(target, @position)
-
-        if desired.magnitude() > 0
-            desired.normalize()
-            desired.multiply(@maxspeed)
-
-            steer = Vector2.subtract(desired, @velocity)
-            steer.clamp(@maxforce)
-        else
-            steer = new Vector2()
-
-        return steer;
-
+    cohesion: (neighborhood) ->
+        new Vector2(0, 0)
 
     # check for screen wrapping
     wrap: () ->
         # left border
-        if @position.x < -@radius
-            @position.x = canvas.width + @radius
+        if @position.x < -@size
+            @position.x = canvas.width + @size
         # bottom border
-        if @position.y < -@radius
-            @position.y = canvas.height + @radius
+        if @position.y < -@size
+            @position.y = canvas.height + @size
         # right border
-        if @position.x > canvas.width + @radius
-            @position.x = -@radius
+        if @position.x > canvas.width + @size
+            @position.x = -@size
         # top border
-        if @position.y > canvas.height + @radius
-            @position.y = -@radius
+        if @position.y > canvas.height + @size
+            @position.y = -@size
 
         return
+
+export default Boid

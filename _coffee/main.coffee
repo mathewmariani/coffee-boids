@@ -12,13 +12,11 @@ window.addEventListener('resize', (->
     return
 ), false)
 
-
 resizeCanvas = () ->
     canvas.width = window.innerWidth
     canvas.height = window.innerHeight
     return
 
-# request animation frame
 raf = window.requestAnimationFrame or
     window.webkitRequestAnimationFrame or
     window.mozRequestAnimationFrame or
@@ -28,21 +26,21 @@ raf = window.requestAnimationFrame or
         window.setTimeout(callback, 1000/fps)
         return
 
-fps = 30
-flock = []
+import Boid from './boid.js'
+fps = 60
 
 start = () ->
     # initialize all boids
-    for i in [0..50]
+    for i in [0..500]
         x = Math.floor((Math.random() * canvas.width) + 1)
         y = Math.floor((Math.random() * canvas.height) + 1)
-        flock[i] = new Boid(x, y)
+        new Boid(x, y)
 
     drawnSinceLastUpdate = true;
 
     tick = setInterval(->
         # logic
-        for boid in flock
+        for boid in Boid.all
             boid.tick()
 
         drawnSinceLastUpdate = false;
@@ -53,8 +51,8 @@ start = () ->
         if not drawnSinceLastUpdate
             context.clearRect(0, 0, canvas.width, canvas.height)
             drawnSinceLastUpdate = true
-            for boid in flock
-                boid.render()
+            for boid in Boid.all
+                boid.render(context)
 
         raf(draw)
         return
