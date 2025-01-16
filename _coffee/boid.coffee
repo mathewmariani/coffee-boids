@@ -8,7 +8,7 @@ class Boid
         # constants
         @size = 8
         @radius = 32
-        @radius2 = @radius * 2
+        @radius2 = @radius * @radius
         @max_acceleration = 10
         @max_speed = 120
 
@@ -25,13 +25,15 @@ class Boid
         @velocity = new Vector2(dx, dy)
         @velocity.multiply(@max_speed)
 
+        @separation_vector = new Vector2(0, 0)
+
         Boid.all.push(this)
 
     getNeighborhood: ->
         neighborhood = []
         for b in Boid.all
             continue if b is this
-            if @position.sqrDistance(b.position) <= @radius2
+            if Vector2.sqrDistance(@position, b.position) <= @radius2
                 neighborhood.push(b)
         neighborhood
 
@@ -62,11 +64,42 @@ class Boid
         ctx.lineWidth = 0.8
         ctx.strokeStyle = '#F0F2F3'
         ctx.stroke()
+        ctx.closePath()
+
+        ctx.beginPath()
+        ctx.arc(@position.x, @position.y, @radius, 0, 2 * Math.PI, false)
+        ctx.fillStyle = 'rgba(162, 162, 162, 0.25)'
+        ctx.fill()
+        ctx.lineWidth = 0.8
+        ctx.strokeStyle = '#F0F2F3'
+        ctx.stroke()
+        ctx.closePath()
+
+        ctx.beginPath()
+        ctx.moveTo(@position.x, @position.y)
+        ctx.lineTo(@position.x + @separation_vector.x, @position.y + @separation_vector.y)
+        ctx.strokeStyle = "green"
+        ctx.lineWidth = 2
+        ctx.stroke()
+        ctx.closePath()
+
+
+        for b in Boid.all
+            continue if b is this
+            if Vector2.sqrDistance(@position,b.position) <= @radius2
+                ctx.beginPath()
+                ctx.moveTo(@position.x, @position.y)
+                ctx.lineTo(b.position.x, b.position.y)
+                ctx.strokeStyle = "red"
+                ctx.lineWidth = 1
+                ctx.stroke()
+                ctx.closePath()
         return
 
     flock: () ->
         neighborhood = @getNeighborhood(this)
-        @applyForce(@seperation(neighborhood).multiply(4.75))
+        @separation_vector = @seperation(neighborhood).multiply(4.75)
+        @applyForce(@separation_vector)
         @applyForce(@alignment(neighborhood).multiply(2.90))
         @applyForce(@cohesion(neighborhood).multiply(4.25))
         return
@@ -75,19 +108,18 @@ class Boid
         if neighborhood.length == 0
             return new Vector2(0, 0)
 
-        count = 0
         average_position = new Vector2(0, 0)
+        separation_force = new Vector2(0, 0)
 
         for n in neighborhood
-            if Vector2.distance(@position, n.position) < @sep_dist
-                average_position.add(n.position)
-                count++
+            distance = Vector2.sqrDistance(@position, n.position)
+            if (distance <= @radius2) and (distance > 0)
+                diff = Vector2.subtract(@position, n.position) # Direction away from neighbor
+                diff.normalize()
+                diff.divide(Math.sqrt(distance)) # Scale by inverse distance (closer = stronger)
+                separation_force.add(diff)
 
-        if count == 0
-            return new Vector2(0, 0)
-
-        average_position.divide(count)
-        Vector2.subtract(average_position, @position).normalize()
+        return separation_force
 
     alignment: (neighborhood) ->
         new Vector2(0, 0)

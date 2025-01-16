@@ -5,13 +5,13 @@ class Vector2
             vec1.copy()[name](vec2)
 
     # Static distance methods
-    Vector2.sqrDistance = (vec1, vec2) ->
-        dx = vec1.x - vec2.x
-        dy = vec1.y - vec2.y
+    Vector2.sqrDistance = (a, b) ->
+        dx = a.x - b.x
+        dy = a.y - b.y
         dx * dx + dy * dy
 
-    Vector2.distance = (vec1, vec2) ->
-        Math.sqrt(Vector2.sqrDistance(vec1, vec2))
+    Vector2.distance = (a, b) ->
+        Math.sqrt(Vector2.sqrDistance(a, b))
 
     constructor: (x=0, y=0) ->
         @x = x
@@ -63,11 +63,5 @@ class Vector2
         @x *= other.x
         @y *= other.y
         this
-
-    sqrDistance: (other) ->
-        Vector2.sqrDistance(this, other)
-
-    distance: (other) ->
-        Vector2.distance(this, other)
 
 export default Vector2
