@@ -22,9 +22,9 @@ jobs:
 
       - name: Building Website 🔧
         run: |
+          npm run build
           mkdir -p website
           cp index.html website/
-          cp -r js website/
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4
