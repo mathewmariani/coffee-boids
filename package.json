@@ -1,6 +1,8 @@
 {
-    "dependencies": {
-        "gulp": "3.9.*",
-        "gulp-coffee": "*"
+    "scripts": {
+        "build": "coffee -c -o website/js _coffee"
+    },
+    "devDependencies": {
+        "coffeescript": "^2.7.0"
     }
 }

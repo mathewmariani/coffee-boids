@@ -1,164 +1,112 @@
-class Boid
-    constructor: (x, y) ->
-        # constants
-        @radius = 8
-        @maxspeed = 3
-        @maxforce = 0.05
+import Vector2 from './vector2.js'
+import Actor from './actor.js'
 
-        # distance constants
-        @sep_dist = 25
-        @ali_dist = 50
-        @coh_dist = 50
+class Boid extends Actor
+    # static variable
+    @all = []
+    @coords = [
+        {x: -5, y: -2.5}
+        {x: -5, y: 2.5}
+        {x: 5, y: 0}
+    ]
+
+    constructor: (x, y) ->
+        super()
+
+        # constants
+        @size = 8
+        @radius = 32
+        @radius2 = @radius * @radius
+
+        color = Math.floor(Math.random() * 256)
+        @fill = "hsla(#{color}, 100%, 50%, 0.25)"
+        @stroke = "hsla(#{color}, 100%, 40%, 1.00)"
+
+        dx = Math.random() * 2 - 1
+        dy = Math.random() * 2 - 1
 
         @position = new Vector2(x, y)
-        @acceleration = new Vector2()
-        @velocity = new Vector2(Math.random(), Math.random())
-        @velocity.multiply(@maxspeed)
+        @velocity = new Vector2(dx, dy)
+        @velocity.normalize().multiply(@max_speed)
 
-    tick: () ->
-        @flock()
-        @update()
-        @wrap()
-        return
+        Boid.all.push(this)
 
-    addForce: (force) ->
-        @acceleration.add(force)
-        return
+    getNeighborhood: () ->
+        neighborhood = []
+        for b in Boid.all
+            continue if b is this
+            if Vector2.sqrDistance(@position, b.position) <= @radius2
+                neighborhood.push(b)
+        return neighborhood
 
     update: () ->
-        @velocity.add(@acceleration);
-        @velocity.clamp(@maxspeed)
-        @position.add(@velocity);
-        @acceleration.multiply(0);
+        @physics()
+        @wrap()
+        @flock()
         return
 
-    render: () ->
-        context.beginPath()
-        context.arc(@position.x, @position.y, @radius, 0, 2 * Math.PI, false)
-        context.fillStyle = 'rgba(162, 162, 162, 0.25)'
-        context.fill()
-        context.lineWidth = 0.8
-        context.strokeStyle = '#F0F2F3'
-        context.stroke()
+    render: (ctx) ->
+        ctx.fillStyle = @fill
+        ctx.strokeStyle = @stroke
+
+        ctx.save()
+        ctx.translate(@position.x, @position.y)
+        ctx.rotate(Math.atan2(@forward.y, @forward.x))
+
+        ctx.beginPath()
+        ctx.moveTo(Boid.coords[0].x, Boid.coords[0].y)
+        for pt in Boid.coords[1..]
+            ctx.lineTo(pt.x, pt.y)
+        ctx.closePath()
+
+        ctx.fill()
+        ctx.stroke()
+        ctx.restore()
         return
 
     flock: () ->
-        # get vector forces
-        sep = @seperation()
-        ali = @alignment()
-        coh = @cohesion()
-
-        # apply constants
-        sep.multiply(2.5)
-        ali.multiply(1.0)
-        coh.multiply(1.0)
-
-        # add forces
-        @addForce(sep)
-        @addForce(ali)
-        @addForce(coh)
+        neighborhood = @getNeighborhood()
+        if neighborhood.length is 0
+            return
+        @applyForce(@separation(neighborhood).multiply(4.75))
+        @applyForce(@alignment(neighborhood).multiply(2.90))
+        @applyForce(@cohesion(neighborhood).multiply(4.25))
         return
 
-    # Separation: steer to avoid crowding local flockmates
-    seperation: () ->
-        mean = new Vector2()
-        count = 0
+    separation: (neighborhood) ->
+        average_position = new Vector2(0, 0)
+        for n in neighborhood
+            average_position.add(n.position)
 
-        for b in flock
-            if b is this
-                continue
+        average_position.divide(neighborhood.length)
+        return Vector2.subtract(@position, average_position).normalize()
 
-            dist = @position.distance(b.position)
-            if dist > 0 and dist < @sep_dist
-                diff = Vector2.subtract(@position, b.position)
+    alignment: (neighborhood) ->
+        average_velocity = new Vector2(0, 0)
+        for n in neighborhood
+            average_velocity.add(n.velocity)
 
-                mean.normalize()
-                mean.divide(dist)
-                mean.add(diff)
-                count++
+        # average_velocity.divide(neighborhood.length)
+        return Vector2.subtract(average_velocity, @velocity).normalize()
 
-        if count > 0
-            mean.divide(count)
-
-        if mean.magnitude() > 0
-            mean.normalize()
-            mean.multiply(@maxspeed)
-            mean.subtract(@velocity)
-            mean.clamp(@maxforce)
-
-        mean
-
-    # Alignment: steer towards the average heading of local flockmates
-    alignment: () ->
-        mean = new Vector2()
-        count = 0
-
-        for b in flock
-            if b is this
-                continue
-
-            dist = Vector2.distance(@position, b.position)
-            if dist > 0 and dist < @ali_dist
-                mean.add(b.velocity)
-                count++
-
-        if count > 0
-            mean.divide(count)
-            mean.normalize()
-            mean.multiply(@maxspeed)
-
-            steer = Vector2.subtract(mean, @velocity)
-            steer.clamp(@maxforce)
-            steer
-        else
-            new Vector2()
-
-    cohesion: () ->
-        mean = new Vector2()
-        count = 0
-
-        for b in flock
-            if b is this
-                continue
-
-            dist = Vector2.distance(@position, b.position)
-            if dist > 0 and dist < @coh_dist
-                mean.add(b.position)
-                count++
-
-        if count > 0
-            @seek(mean.divide(count))
-        else
-            new Vector2()
-
-    seek: (target) ->
-        desired = Vector2.subtract(target, @position)
-
-        if desired.magnitude() > 0
-            desired.normalize()
-            desired.multiply(@maxspeed)
-
-            steer = Vector2.subtract(desired, @velocity)
-            steer.clamp(@maxforce)
-        else
-            steer = new Vector2()
-
-        return steer;
-
+    cohesion: (neighborhood) ->
+        average_position = new Vector2(0, 0)
+        for n in neighborhood
+            average_position.add(n.position)
+        
+        average_position.divide(neighborhood.length)
+        return Vector2.subtract(average_position, @position).normalize()
 
     # check for screen wrapping
     wrap: () ->
-        # left border
-        if @position.x < -@radius
-            @position.x = canvas.width + @radius
-        # bottom border
-        if @position.y < -@radius
-            @position.y = canvas.height + @radius
-        # right border
-        if @position.x > canvas.width + @radius
-            @position.x = -@radius
-        # top border
-        if @position.y > canvas.height + @radius
-            @position.y = -@radius
-
+        if @position.x < 0
+            @position.x += canvas.width
+        else if @position.x > canvas.width
+            @position.x -= canvas.width
+        if @position.y < 0
+            @position.y += canvas.height
+        else if @position.y > canvas.height
+            @position.y -= canvas.height
         return
+
+export default Boid

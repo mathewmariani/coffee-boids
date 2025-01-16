@@ -2,74 +2,48 @@
 canvas = document.getElementById('canvas')
 context = canvas.getContext('2d')
 
-window.addEventListener('orientationchange', (->
-    resizeCanvas()
-    return
-), false)
-
-window.addEventListener('resize', (->
-    resizeCanvas()
-    return
-), false)
-
-
 resizeCanvas = () ->
     canvas.width = window.innerWidth
     canvas.height = window.innerHeight
     return
 
-# request animation frame
+window.addEventListener('orientationchange', resizeCanvas, false)
+window.addEventListener('resize', resizeCanvas, false)
+
 raf = window.requestAnimationFrame or
     window.webkitRequestAnimationFrame or
     window.mozRequestAnimationFrame or
     window.oRequestAnimationFrame or
     window.msRequestAnimationFrame or
     (callback) ->
-        window.setTimeout(callback, 1000/fps)
-        return
+        window.setTimeout(callback, 1000 / 60)
 
-fps = 30
-flock = []
+import Boid from './boid.js'
 
 start = () ->
-    # initialize all boids
-    for i in [0..50]
-        x = Math.floor((Math.random() * canvas.width) + 1)
-        y = Math.floor((Math.random() * canvas.height) + 1)
-        flock[i] = new Boid(x, y)
-
-    drawnSinceLastUpdate = true;
-
-    tick = setInterval(->
-        # logic
-        for boid in flock
-            boid.tick()
-
-        drawnSinceLastUpdate = false;
-        return
-    , 1000/fps)
+    # initialize boids
+    for i in [0...500]
+        x = Math.random() * canvas.width
+        y = Math.random() * canvas.height
+        new Boid(x, y)
 
     draw = () ->
-        if not drawnSinceLastUpdate
-            context.clearRect(0, 0, canvas.width, canvas.height)
-            drawnSinceLastUpdate = true
-            for boid in flock
-                boid.render()
-
+        context.clearRect(0, 0, canvas.width, canvas.height)
+        for boid in Boid.all
+            boid.update()
+            boid.render(context)
         raf(draw)
-        return
 
     draw()
     return
 
 # click event listener
-canvas.addEventListener('click', ((event) ->
-    flock.push(new Boid(event.pageX, event.pageY))
-).bind(this))
+canvas.addEventListener('click', (event) ->
+    new Boid(event.pageX, event.pageY)
+)
 
 # start immediately
-setTimeout(->
+setTimeout( ->
     resizeCanvas()
     start()
-    return
 , 0)
