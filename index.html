@@ -2,69 +2,26 @@
 <html>
 
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-
     <title>Boids</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
-
     <style>
         body {
             width: 100%;
             height: 100%;
             margin: 0;
             padding: 0;
-
-            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-            font-size: 125%;
-            font-weight: 300;
         }
 
-        canvas {
+        #canvas {
             background-color: #333333;
-        }
-
-
-        .overlay {
-            position: absolute;
-            top: 0px;
-            left: 0px;
-            margin: 8px;
-            padding: 0;
-            color: #fff;
-
-            display: flex;
-            flex-grow: 1;
-            flex-direction: row;
-            align-items: center;
-        }
-
-        a, a:link {
-            color: #fff;
-        }
-
-        a:hover {
-            color: #7D7D7D;
         }
     </style>
 </head>
 
 <body>
-    <canvas id='canvas' style='display: block;'></canvas>
-    <div class='overlay'>
-        <a href="https://github.com/nonsane/coffee-boids">
-            <i class="fa fa-github fa-2x"></i>
-        </a>
-        <p style='margin: 0 0 0 8px; padding 0px;'>Click/Touch to add Boids</p>
-    </div>
+    <canvas id="canvas" style="display: block;"></canvas>
 </body>
 
 </html>
 
-<!-- CORE LOGIC -->
-<script src="js/vector2.min.js"></script>
-
-<!-- GAME LOGIC -->
-<script src="js/boid.min.js"></script>
-
 <!-- ENTRY POINT -->
-<script src="js/main.min.js"></script>
+<script type="module" src="js/main.js"></script>
