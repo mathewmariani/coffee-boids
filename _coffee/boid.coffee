@@ -1,22 +1,31 @@
 import Vector2 from './vector2.js'
+import Actor from './actor.js'
 
-class Boid
+class Boid extends Actor
     # static variable
     @all = []
+    @coords = [
+        {x: -5, y: -2.5}
+        {x: -5, y: 2.5}
+        {x: 5, y: 0}
+    ]
 
     constructor: (x, y) ->
+        super()
+
         # constants
         @size = 8
         @radius = 32
         @radius2 = @radius * @radius
-        @max_acceleration = 10
-        @max_speed = 120
+
+        color = Math.floor(Math.random() * 256)
+        @fill = "hsla(#{color}, 100%, 50%, 0.25)"
+        @stroke = "hsla(#{color}, 100%, 40%, 1.00)"
 
         dx = Math.random() * 2 - 1
         dy = Math.random() * 2 - 1
 
         @position = new Vector2(x, y)
-        @acceleration = new Vector2(0, 0)
         @velocity = new Vector2(dx, dy)
         @velocity.normalize().multiply(@max_speed)
 
@@ -36,64 +45,39 @@ class Boid
         @flock()
         return
 
-    applyForce: (force) ->
-        @acceleration.add(force)
-        return
-
-    physics: () ->
-        delta_time = 1 / 60
-        if @acceleration.magnitude() > @max_acceleration
-            @acceleration.normalize().multiply(@max_acceleration)
-
-        # integration step
-        @velocity.add(@acceleration)
-        if @velocity.magnitude() > @max_speed
-            @velocity.normalize().multiply(@max_speed)
-
-        @position.add(Vector2.multiply(@velocity, delta_time))
-        @acceleration = new Vector2(0, 0)
-        console.log("Boid at:", Vector2.multiply(@velocity, delta_time), "with velocity:", @velocity)
-        return
-
     render: (ctx) ->
+        ctx.fillStyle = @fill
+        ctx.strokeStyle = @stroke
+
+        ctx.save()
+        ctx.translate(@position.x, @position.y)
+        ctx.rotate(Math.atan2(@forward.y, @forward.x))
+
         ctx.beginPath()
-        ctx.arc(@position.x, @position.y, @size, 0, 2 * Math.PI, false)
-        ctx.fillStyle = 'rgba(162, 162, 162, 0.25)'
-        ctx.fill()
-        ctx.lineWidth = 0.8
-        ctx.strokeStyle = '#F0F2F3'
-        ctx.stroke()
+        ctx.moveTo(Boid.coords[0].x, Boid.coords[0].y)
+        for pt in Boid.coords[1..]
+            ctx.lineTo(pt.x, pt.y)
         ctx.closePath()
 
-        for b in Boid.all
-            continue if b is this
-            if Vector2.sqrDistance(@position,b.position) <= @radius2
-                ctx.beginPath()
-                ctx.moveTo(@position.x, @position.y)
-                ctx.lineTo(b.position.x, b.position.y)
-                ctx.strokeStyle = "red"
-                ctx.lineWidth = 1
-                ctx.stroke()
-                ctx.closePath()
+        ctx.fill()
+        ctx.stroke()
+        ctx.restore()
         return
 
     flock: () ->
         neighborhood = @getNeighborhood()
         if neighborhood.length is 0
             return
-        separation_force = @separation(neighborhood).multiply(4.75)
-        alignment_force = @alignment(neighborhood).multiply(2.90)
-        cohesion_force = @cohesion(neighborhood).multiply(4.25)
-        @applyForce(separation_force)
-        @applyForce(alignment_force)
-        @applyForce(cohesion_force)
+        @applyForce(@separation(neighborhood).multiply(4.75))
+        @applyForce(@alignment(neighborhood).multiply(2.90))
+        @applyForce(@cohesion(neighborhood).multiply(4.25))
         return
 
     separation: (neighborhood) ->
         average_position = new Vector2(0, 0)
         for n in neighborhood
             average_position.add(n.position)
-        
+
         average_position.divide(neighborhood.length)
         return Vector2.subtract(@position, average_position).normalize()
 
@@ -102,6 +86,7 @@ class Boid
         for n in neighborhood
             average_velocity.add(n.velocity)
 
+        # average_velocity.divide(neighborhood.length)
         return Vector2.subtract(average_velocity, @velocity).normalize()
 
     cohesion: (neighborhood) ->
