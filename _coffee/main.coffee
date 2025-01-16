@@ -22,7 +22,7 @@ import Boid from './boid.js'
 
 start = () ->
     # initialize boids
-    for i in [0...0]
+    for i in [0...500]
         x = Math.random() * canvas.width
         y = Math.random() * canvas.height
         new Boid(x, y)
