@@ -1,8 +1,8 @@
-# Artificial Intelligence for Games (GPR340)
+# coffee-boids
 
 [![Build](/../../actions/workflows/main.yml/badge.svg)](/../../actions/workflows/main.yml)
 
-An implementation of [Craig Reynolds' Boids](http://www.red3d.com/cwr/boids/) as an exploration in coffeescript.
+An implementation of [Craig Reynolds' Boids](http://www.red3d.com/cwr/boids/) as an exploration in [CoffeeScript](https://coffeescript.org/).
 
 ## License
 
