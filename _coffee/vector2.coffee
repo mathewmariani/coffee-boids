@@ -1,8 +1,9 @@
 class Vector2
     # Class methods for nondestructively operating
-    for name in ['add', 'subtract', 'multiply', 'divide', 'scale']
-        Vector2[name] = (vec1, vec2) ->
-            vec1.copy()[name](vec2)
+    for name in ['add', 'subtract', 'multiply', 'divide']
+        do (name) ->
+            Vector2[name] = (vec1, vec2) ->
+                vec1.copy()[name](vec2)
 
     # Static distance methods
     Vector2.sqrDistance = (a, b) ->
