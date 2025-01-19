@@ -1,18 +1,16 @@
 # lil-gui
-import GUI from 'https://cdn.jsdelivr.net/npm/lil-gui@0.20/+esm';
+import GUI from 'https://cdn.jsdelivr.net/npm/lil-gui@0.20/+esm'
 
 gui = new GUI()
-obj = {
-    alignmentForce: 0,
-    separationForce: 0,
-    cohesionForce: 0,
-    boidCount: 500,
-}
 
-gui.add(obj, 'alignmentForce', 0, 1)
-gui.add(obj, 'separationForce', 0, 100, 10)
-gui.add(obj, 'cohesionForce', 0, 100, 10)
-gui.add(obj, 'boidCount', 0, 100, 10)
+import { shared } from "./shared.js"
+
+gui.add(shared, 'alignmentForce', 0, 10)
+gui.add(shared, 'separationForce', 0, 10)
+gui.add(shared, 'cohesionForce', 0, 10)
+gui.add(shared, 'boidCount', 0, 1000, 1)
+gui.add(shared, 'drawRadius')
+gui.add(shared, 'drawNeighbors')
 
 # get canvas
 canvas = document.getElementById('canvas')
@@ -36,18 +34,46 @@ raf = window.requestAnimationFrame or
 
 import Boid from './boid.js'
 
-start = () ->
-    # initialize boids
-    for i in [0...500]
-        x = Math.random() * canvas.width
-        y = Math.random() * canvas.height
-        new Boid(x, y)
+setPopulation = (size) ->
+    current_size = Boid.all.length
+    if size > current_size
+        for i in [current_size...size]
+            x = Math.random() * canvas.width
+            y = Math.random() * canvas.height
+            new Boid(x, y)
+    else if size < current_size
+        Boid.all.splice(size)
 
+start = () ->
     draw = () ->
+        setPopulation(shared.boidCount)
         context.clearRect(0, 0, canvas.width, canvas.height)
         for boid in Boid.all
             boid.update()
             boid.render(context)
+
+        if Boid.all[0]?
+            b = Boid.all[0]
+            if shared.drawRadius
+                context.beginPath()
+                context.arc(b.position.x, b.position.y, b.radius, 0, 2 * Math.PI, false)
+                context.fillStyle = 'rgba(162, 162, 162, 0.25)'
+                context.fill()
+                context.lineWidth = 0.8
+                context.strokeStyle = '#F0F2F3'
+                context.stroke()
+                context.closePath()
+
+            if shared.drawNeighbors
+                for n in b.getNeighborhood()
+                    context.beginPath()
+                    context.moveTo(b.position.x, b.position.y)
+                    context.lineTo(n.position.x, n.position.y)
+                    context.strokeStyle = 'rgba(255, 0, 0, 0.5)'
+                    context.lineWidth = 1
+                    context.stroke()
+                    context.closePath()
+
         raf(draw)
 
     draw()
@@ -59,7 +85,7 @@ canvas.addEventListener('click', (event) ->
 )
 
 # start immediately
-setTimeout( ->
+setTimeout(() ->
     resizeCanvas()
     start()
 , 0)

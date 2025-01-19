@@ -1,5 +1,6 @@
 import Vector2 from './vector2.js'
 import Actor from './actor.js'
+import { shared } from "./shared.js"
 
 class Boid extends Actor
     # static variable
@@ -68,17 +69,22 @@ class Boid extends Actor
         neighborhood = @getNeighborhood()
         if neighborhood.length is 0
             return
-        @applyForce(@separation(neighborhood).multiply(4.75))
-        @applyForce(@alignment(neighborhood).multiply(2.90))
-        @applyForce(@cohesion(neighborhood).multiply(4.25))
+        @applyForce(@separation(neighborhood).multiply(shared.separationForce))
+        @applyForce(@alignment(neighborhood).multiply(shared.alignmentForce))
+        @applyForce(@cohesion(neighborhood).multiply(shared.cohesionForce))
         return
 
     separation: (neighborhood) ->
+        desiredMinimalDistance = (24 * 24)
+        count = 0
         average_position = new Vector2(0, 0)
         for n in neighborhood
-            average_position.add(n.position)
+            dist = Vector2.sqrDistance(@position, n.position)
+            if dist < desiredMinimalDistance
+                average_position.add(n.position)
+                count++
 
-        average_position.divide(neighborhood.length)
+        average_position.divide(count)
         return Vector2.subtract(@position, average_position).normalize()
 
     alignment: (neighborhood) ->
