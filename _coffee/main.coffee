@@ -1,3 +1,19 @@
+# lil-gui
+import GUI from 'https://cdn.jsdelivr.net/npm/lil-gui@0.20/+esm';
+
+gui = new GUI()
+obj = {
+    alignmentForce: 0,
+    separationForce: 0,
+    cohesionForce: 0,
+    boidCount: 500,
+}
+
+gui.add(obj, 'alignmentForce', 0, 1)
+gui.add(obj, 'separationForce', 0, 100, 10)
+gui.add(obj, 'cohesionForce', 0, 100, 10)
+gui.add(obj, 'boidCount', 0, 100, 10)
+
 # get canvas
 canvas = document.getElementById('canvas')
 context = canvas.getContext('2d')

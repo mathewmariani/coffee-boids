@@ -3,6 +3,7 @@
         "build": "coffee -c -o website/js _coffee"
     },
     "devDependencies": {
-        "coffeescript": "^2.7.0"
+        "coffeescript": "^2.7.0",
+        "lil-gui": "^0.20.0"
     }
 }
