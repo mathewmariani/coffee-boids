@@ -1,10 +1,9 @@
+import { shared } from "./shared.js"
+
 # lil-gui
 import GUI from 'https://cdn.jsdelivr.net/npm/lil-gui@0.20/+esm'
 
 gui = new GUI()
-
-import { shared } from "./shared.js"
-
 gui.add(shared, 'alignmentForce', 0, 10)
 gui.add(shared, 'separationForce', 0, 10)
 gui.add(shared, 'cohesionForce', 0, 10)
@@ -57,10 +56,10 @@ start = () ->
             if shared.drawRadius
                 context.beginPath()
                 context.arc(b.position.x, b.position.y, b.radius, 0, 2 * Math.PI, false)
-                context.fillStyle = 'rgba(162, 162, 162, 0.25)'
+                context.fillStyle = 'hsla(0, 0%, 63.53%, 0.25)'
                 context.fill()
                 context.lineWidth = 0.8
-                context.strokeStyle = '#F0F2F3'
+                context.strokeStyle = 'hsl(180, 3.7%, 95.29%)'
                 context.stroke()
                 context.closePath()
 
@@ -69,12 +68,13 @@ start = () ->
                     context.beginPath()
                     context.moveTo(b.position.x, b.position.y)
                     context.lineTo(n.position.x, n.position.y)
-                    context.strokeStyle = 'rgba(255, 0, 0, 0.5)'
+                    context.fillStyle = 'hsla(0, 100%, 50%, 0.5)'
                     context.lineWidth = 1
                     context.stroke()
                     context.closePath()
 
         raf(draw)
+        return
 
     draw()
     return
