@@ -5,6 +5,10 @@ import Vector2 from './vector2.js';
 
 import Actor from './actor.js';
 
+import {
+  shared
+} from "./shared.js";
+
 Boid = (function() {
   class Boid extends Actor {
     constructor(x, y) {
@@ -12,8 +16,6 @@ Boid = (function() {
       super();
       // constants
       this.size = 8;
-      this.radius = 32;
-      this.radius2 = this.radius * this.radius;
       color = Math.floor(Math.random() * 256);
       this.fill = `hsla(${color}, 100%, 50%, 0.25)`;
       this.stroke = `hsla(${color}, 100%, 40%, 1.00)`;
@@ -26,7 +28,8 @@ Boid = (function() {
     }
 
     getNeighborhood() {
-      var b, i, len, neighborhood, ref;
+      var b, i, len, neighborhood, radius2, ref;
+      radius2 = shared.boidRadius * shared.boidRadius;
       neighborhood = [];
       ref = Boid.all;
       for (i = 0, len = ref.length; i < len; i++) {
@@ -34,7 +37,7 @@ Boid = (function() {
         if (b === this) {
           continue;
         }
-        if (Vector2.sqrDistance(this.position, b.position) <= this.radius2) {
+        if (Vector2.sqrDistance(this.position, b.position) <= radius2) {
           neighborhood.push(b);
         }
       }
@@ -49,9 +52,10 @@ Boid = (function() {
 
     render(ctx) {
       var i, len, pt, ref;
+      ctx.save();
       ctx.fillStyle = this.fill;
       ctx.strokeStyle = this.stroke;
-      ctx.save();
+      ctx.lineWidth = 2;
       ctx.translate(this.position.x, this.position.y);
       ctx.rotate(Math.atan2(this.forward.y, this.forward.x));
       ctx.beginPath();
@@ -73,19 +77,24 @@ Boid = (function() {
       if (neighborhood.length === 0) {
         return;
       }
-      this.applyForce(this.separation(neighborhood).multiply(4.75));
-      this.applyForce(this.alignment(neighborhood).multiply(2.90));
-      this.applyForce(this.cohesion(neighborhood).multiply(4.25));
+      this.applyForce(this.separation(neighborhood).multiply(shared.separationForce));
+      this.applyForce(this.alignment(neighborhood).multiply(shared.alignmentForce));
+      this.applyForce(this.cohesion(neighborhood).multiply(shared.cohesionForce));
     }
 
     separation(neighborhood) {
-      var average_position, i, len, n;
+      var average_position, count, dist, i, len, n;
+      count = 0;
       average_position = new Vector2(0, 0);
       for (i = 0, len = neighborhood.length; i < len; i++) {
         n = neighborhood[i];
-        average_position.add(n.position);
+        dist = Vector2.distance(this.position, n.position);
+        if (dist < shared.separationDistance) {
+          average_position.add(n.position);
+          count++;
+        }
       }
-      average_position.divide(neighborhood.length);
+      average_position.divide(count);
       return Vector2.subtract(this.position, average_position).normalize();
     }
 
