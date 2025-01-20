@@ -4,18 +4,18 @@ import { shared } from "./shared.js"
 import GUI from "https://cdn.jsdelivr.net/npm/lil-gui@0.20/+esm"
 
 gui = new GUI()
-gui.add(shared, "radius", 0, 100)
 gui.add(shared, "separationDistance", 0, 100)
 gui.add(shared, "alignmentForce", 0, 10)
 gui.add(shared, "separationForce", 0, 10)
 gui.add(shared, "cohesionForce", 0, 10)
 gui.add(shared, "boidCount", 0, 1000, 1)
+gui.add(shared, "boidRadius", 0, 100)
 gui.add(shared, "drawRadius")
 gui.add(shared, "drawNeighbors")
 
 # get canvas
 canvas = document.getElementById("canvas")
-context = canvas.getContext("2d")
+ctx = canvas.getContext("2d")
 
 resizeCanvas = () ->
     canvas.width = window.innerWidth
@@ -48,30 +48,35 @@ setPopulation = (size) ->
 start = () ->
     draw = () ->
         setPopulation(shared.boidCount)
-        context.clearRect(0, 0, canvas.width, canvas.height)
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
         for boid in Boid.all
             boid.update()
-            boid.render(context)
+            boid.render(ctx)
 
         if Boid.all[0]?
             b = Boid.all[0]
             if shared.drawRadius
-                context.beginPath()
-                context.arc(b.position.x, b.position.y, shared.radius, 0, 2 * Math.PI, false)
-                context.fillStyle = "hsla(0, 0%, 63.53%, 0.25)"
-                context.fill()
-                context.strokeStyle = "hsl(180, 3.7%, 95.29%)"
-                context.stroke()
-                context.closePath()
+                ctx.save()
+                ctx.fillStyle = "hsla(0, 0%, 63.53%, 0.25)"
+                ctx.strokeStyle = "hsl(180, 3.7%, 95.29%)"
+                ctx.lineWidth = 2
+                ctx.beginPath()
+                ctx.arc(b.position.x, b.position.y, shared.boidRadius, 0, 2 * Math.PI, false)
+                ctx.fill()
+                ctx.stroke()
+                ctx.closePath()
+                ctx.restore()
 
             if shared.drawNeighbors
                 for n in b.getNeighborhood()
-                    context.beginPath()
-                    context.moveTo(b.position.x, b.position.y)
-                    context.lineTo(n.position.x, n.position.y)
-                    context.fillStyle = "hsla(0, 100%, 50%, 0.5)"
-                    context.stroke()
-                    context.closePath()
+                    ctx.save()
+                    ctx.strokeStyle = "hsla(0, 100%, 50%, 0.5)"
+                    ctx.beginPath()
+                    ctx.moveTo(b.position.x, b.position.y)
+                    ctx.lineTo(n.position.x, n.position.y)
+                    ctx.stroke()
+                    ctx.closePath()
+                    ctx.restore()
 
         raf(draw)
         return

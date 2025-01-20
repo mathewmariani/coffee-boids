@@ -31,7 +31,7 @@ class Boid extends Actor
         Boid.all.push(this)
 
     getNeighborhood: () ->
-        radius2 = shared.radius * shared.radius
+        radius2 = shared.boidRadius * shared.boidRadius
         neighborhood = []
         for b in Boid.all
             continue if b is this
@@ -46,10 +46,10 @@ class Boid extends Actor
         return
 
     render: (ctx) ->
+        ctx.save()
         ctx.fillStyle = @fill
         ctx.strokeStyle = @stroke
-
-        ctx.save()
+        ctx.lineWidth = 2
         ctx.translate(@position.x, @position.y)
         ctx.rotate(Math.atan2(@forward.y, @forward.x))
 
