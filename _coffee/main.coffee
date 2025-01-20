@@ -1,27 +1,29 @@
 import { shared } from "./shared.js"
 
 # lil-gui
-import GUI from 'https://cdn.jsdelivr.net/npm/lil-gui@0.20/+esm'
+import GUI from "https://cdn.jsdelivr.net/npm/lil-gui@0.20/+esm"
 
 gui = new GUI()
-gui.add(shared, 'alignmentForce', 0, 10)
-gui.add(shared, 'separationForce', 0, 10)
-gui.add(shared, 'cohesionForce', 0, 10)
-gui.add(shared, 'boidCount', 0, 1000, 1)
-gui.add(shared, 'drawRadius')
-gui.add(shared, 'drawNeighbors')
+gui.add(shared, "radius", 0, 100)
+gui.add(shared, "separationDistance", 0, 100)
+gui.add(shared, "alignmentForce", 0, 10)
+gui.add(shared, "separationForce", 0, 10)
+gui.add(shared, "cohesionForce", 0, 10)
+gui.add(shared, "boidCount", 0, 1000, 1)
+gui.add(shared, "drawRadius")
+gui.add(shared, "drawNeighbors")
 
 # get canvas
-canvas = document.getElementById('canvas')
-context = canvas.getContext('2d')
+canvas = document.getElementById("canvas")
+context = canvas.getContext("2d")
 
 resizeCanvas = () ->
     canvas.width = window.innerWidth
     canvas.height = window.innerHeight
     return
 
-window.addEventListener('orientationchange', resizeCanvas, false)
-window.addEventListener('resize', resizeCanvas, false)
+window.addEventListener("orientationchange", resizeCanvas, false)
+window.addEventListener("resize", resizeCanvas, false)
 
 raf = window.requestAnimationFrame or
     window.webkitRequestAnimationFrame or
@@ -31,7 +33,7 @@ raf = window.requestAnimationFrame or
     (callback) ->
         window.setTimeout(callback, 1000 / 60)
 
-import Boid from './boid.js'
+import Boid from "./boid.js"
 
 setPopulation = (size) ->
     current_size = Boid.all.length
@@ -55,11 +57,10 @@ start = () ->
             b = Boid.all[0]
             if shared.drawRadius
                 context.beginPath()
-                context.arc(b.position.x, b.position.y, b.radius, 0, 2 * Math.PI, false)
-                context.fillStyle = 'hsla(0, 0%, 63.53%, 0.25)'
+                context.arc(b.position.x, b.position.y, shared.radius, 0, 2 * Math.PI, false)
+                context.fillStyle = "hsla(0, 0%, 63.53%, 0.25)"
                 context.fill()
-                context.lineWidth = 0.8
-                context.strokeStyle = 'hsl(180, 3.7%, 95.29%)'
+                context.strokeStyle = "hsl(180, 3.7%, 95.29%)"
                 context.stroke()
                 context.closePath()
 
@@ -68,8 +69,7 @@ start = () ->
                     context.beginPath()
                     context.moveTo(b.position.x, b.position.y)
                     context.lineTo(n.position.x, n.position.y)
-                    context.fillStyle = 'hsla(0, 100%, 50%, 0.5)'
-                    context.lineWidth = 1
+                    context.fillStyle = "hsla(0, 100%, 50%, 0.5)"
                     context.stroke()
                     context.closePath()
 
@@ -78,11 +78,6 @@ start = () ->
 
     draw()
     return
-
-# click event listener
-canvas.addEventListener('click', (event) ->
-    new Boid(event.pageX, event.pageY)
-)
 
 # start immediately
 setTimeout(() ->

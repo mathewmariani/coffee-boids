@@ -16,8 +16,6 @@ class Boid extends Actor
 
         # constants
         @size = 8
-        @radius = 32
-        @radius2 = @radius * @radius
 
         color = Math.floor(Math.random() * 256)
         @fill = "hsla(#{color}, 100%, 50%, 0.25)"
@@ -33,10 +31,11 @@ class Boid extends Actor
         Boid.all.push(this)
 
     getNeighborhood: () ->
+        radius2 = shared.radius * shared.radius
         neighborhood = []
         for b in Boid.all
             continue if b is this
-            if Vector2.sqrDistance(@position, b.position) <= @radius2
+            if Vector2.sqrDistance(@position, b.position) <= radius2
                 neighborhood.push(b)
         return neighborhood
 
@@ -75,12 +74,11 @@ class Boid extends Actor
         return
 
     separation: (neighborhood) ->
-        desiredMinimalDistance = (24 * 24)
         count = 0
         average_position = new Vector2(0, 0)
         for n in neighborhood
-            dist = Vector2.sqrDistance(@position, n.position)
-            if dist < desiredMinimalDistance
+            dist = Vector2.distance(@position, n.position)
+            if dist < shared.separationDistance
                 average_position.add(n.position)
                 count++
 
