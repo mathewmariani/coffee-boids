@@ -1,5 +1,6 @@
 import Vector2 from './vector2.js'
 import Actor from './actor.js'
+import { shared } from "./shared.js"
 
 class Boid extends Actor
     # static variable
@@ -15,8 +16,6 @@ class Boid extends Actor
 
         # constants
         @size = 8
-        @radius = 32
-        @radius2 = @radius * @radius
 
         color = Math.floor(Math.random() * 256)
         @fill = "hsla(#{color}, 100%, 50%, 0.25)"
@@ -32,10 +31,11 @@ class Boid extends Actor
         Boid.all.push(this)
 
     getNeighborhood: () ->
+        radius2 = shared.boidRadius * shared.boidRadius
         neighborhood = []
         for b in Boid.all
             continue if b is this
-            if Vector2.sqrDistance(@position, b.position) <= @radius2
+            if Vector2.sqrDistance(@position, b.position) <= radius2
                 neighborhood.push(b)
         return neighborhood
 
@@ -46,10 +46,10 @@ class Boid extends Actor
         return
 
     render: (ctx) ->
+        ctx.save()
         ctx.fillStyle = @fill
         ctx.strokeStyle = @stroke
-
-        ctx.save()
+        ctx.lineWidth = 2
         ctx.translate(@position.x, @position.y)
         ctx.rotate(Math.atan2(@forward.y, @forward.x))
 
@@ -68,17 +68,21 @@ class Boid extends Actor
         neighborhood = @getNeighborhood()
         if neighborhood.length is 0
             return
-        @applyForce(@separation(neighborhood).multiply(4.75))
-        @applyForce(@alignment(neighborhood).multiply(2.90))
-        @applyForce(@cohesion(neighborhood).multiply(4.25))
+        @applyForce(@separation(neighborhood).multiply(shared.separationForce))
+        @applyForce(@alignment(neighborhood).multiply(shared.alignmentForce))
+        @applyForce(@cohesion(neighborhood).multiply(shared.cohesionForce))
         return
 
     separation: (neighborhood) ->
+        count = 0
         average_position = new Vector2(0, 0)
         for n in neighborhood
-            average_position.add(n.position)
+            dist = Vector2.distance(@position, n.position)
+            if dist < shared.separationDistance
+                average_position.add(n.position)
+                count++
 
-        average_position.divide(neighborhood.length)
+        average_position.divide(count)
         return Vector2.subtract(@position, average_position).normalize()
 
     alignment: (neighborhood) ->
