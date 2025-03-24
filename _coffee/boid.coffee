@@ -14,9 +14,6 @@ class Boid extends Actor
     constructor: (x, y) ->
         super()
 
-        # constants
-        @size = 8
-
         color = Math.floor(Math.random() * 256)
         @fill = "hsla(#{color}, 100%, 50%, 0.25)"
         @stroke = "hsla(#{color}, 100%, 40%, 1.00)"
@@ -31,18 +28,50 @@ class Boid extends Actor
         Boid.all.push(this)
 
     getNeighborhood: () ->
-        radius2 = shared.boidRadius * shared.boidRadius
+        radius2 = shared.boidViewRadius * shared.boidViewRadius
         neighborhood = []
         for b in Boid.all
             continue if b is this
             if Vector2.sqrDistance(@position, b.position) <= radius2
+                continue if not @canSee(b)
                 neighborhood.push(b)
         return neighborhood
 
     update: () ->
+        @acceleration = new Vector2(0, 0)
+        heading = new Vector2(0, 0)
+        avoid = new Vector2(0, 0)
+        center = new Vector2(0, 0)
+
+        count = 0
+        for b in Boid.all
+            continue if b is this
+            offset = Vector2.subtract(b.position, @position)
+            dist = Vector2.sqrDistance(b.position, @position)
+            if dist < (shared.boidViewRadius * shared.boidViewRadius)
+                continue if not @canSee(b)
+                count += 1
+                heading.add(b.forward)
+                center.add(b.position)
+                if dist < (shared.boidAvoidanceDist * shared.boidAvoidanceDist)
+                    avoid.subtract(offset.multiply(1 / dist))
+
+        if count != 0
+            offsetToCentre = Vector2.subtract(center.divide(count), @position)
+
+            alignmentForce = @steerTowards(heading.divide(count)).multiply(shared.boidAlignmentWeight)
+            cohesionForce = @steerTowards(offsetToCentre).multiply(shared.boidCohesionWeight)
+            separationForce = @steerTowards(avoid).multiply(shared.boidSeparationWeight)
+
+            if shared.boidUseAlignmentForce
+                @applyForce(alignmentForce)
+            if shared.boidUseCohesionForce
+                @applyForce(cohesionForce)
+            if shared.boidUseSeparationForce
+                @applyForce(separationForce)
+            
         @physics()
         @wrap()
-        @flock()
         return
 
     render: (ctx) ->
@@ -62,55 +91,6 @@ class Boid extends Actor
         ctx.fill()
         ctx.stroke()
         ctx.restore()
-        return
-
-    flock: () ->
-        neighborhood = @getNeighborhood()
-        if neighborhood.length is 0
-            return
-        @applyForce(@separation(neighborhood).multiply(shared.separationForce))
-        @applyForce(@alignment(neighborhood).multiply(shared.alignmentForce))
-        @applyForce(@cohesion(neighborhood).multiply(shared.cohesionForce))
-        return
-
-    separation: (neighborhood) ->
-        count = 0
-        average_position = new Vector2(0, 0)
-        for n in neighborhood
-            dist = Vector2.distance(@position, n.position)
-            if dist < shared.separationDistance
-                average_position.add(n.position)
-                count++
-
-        average_position.divide(count)
-        return Vector2.subtract(@position, average_position).normalize()
-
-    alignment: (neighborhood) ->
-        average_velocity = new Vector2(0, 0)
-        for n in neighborhood
-            average_velocity.add(n.velocity)
-
-        # average_velocity.divide(neighborhood.length)
-        return Vector2.subtract(average_velocity, @velocity).normalize()
-
-    cohesion: (neighborhood) ->
-        average_position = new Vector2(0, 0)
-        for n in neighborhood
-            average_position.add(n.position)
-        
-        average_position.divide(neighborhood.length)
-        return Vector2.subtract(average_position, @position).normalize()
-
-    # check for screen wrapping
-    wrap: () ->
-        if @position.x < 0
-            @position.x += canvas.width
-        else if @position.x > canvas.width
-            @position.x -= canvas.width
-        if @position.y < 0
-            @position.y += canvas.height
-        else if @position.y > canvas.height
-            @position.y -= canvas.height
         return
 
 export default Boid

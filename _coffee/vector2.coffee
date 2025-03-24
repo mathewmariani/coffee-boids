@@ -33,10 +33,12 @@ class Vector2
             @y = 0
         this
 
-    clamp: (max) ->
-        if @magnitude() > max
-            @normalize()
-            @multiply(max)
+    clamp: (min, max) ->
+        m = @magnitude()
+        if m > max
+            @normalize().multiply(max)
+        else if m < min and m > 0
+            @normalize().multiply(min)
         this
 
     add: (other) ->
@@ -63,6 +65,13 @@ class Vector2
     scale: (other) ->
         @x *= other.x
         @y *= other.y
+        this
+    
+    dot: (other) -> 
+        return @x * other.x + @y * other.y
+
+    cross: (other) ->
+        @x * other.y - @y * other.x
         this
 
 export default Vector2
