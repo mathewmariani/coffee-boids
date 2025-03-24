@@ -41,10 +41,13 @@ Vector2 = (function() {
       return this;
     }
 
-    clamp(max) {
-      if (this.magnitude() > max) {
-        this.normalize();
-        this.multiply(max);
+    clamp(min, max) {
+      var m;
+      m = this.magnitude();
+      if (m > max) {
+        this.normalize().multiply(max);
+      } else if (m < min && m > 0) {
+        this.normalize().multiply(min);
       }
       return this;
     }
@@ -78,6 +81,15 @@ Vector2 = (function() {
     scale(other) {
       this.x *= other.x;
       this.y *= other.y;
+      return this;
+    }
+
+    dot(other) {
+      return this.x * other.x + this.y * other.y;
+    }
+
+    cross(other) {
+      this.x * other.y - this.y * other.x;
       return this;
     }
 

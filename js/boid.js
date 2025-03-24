@@ -14,8 +14,6 @@ Boid = (function() {
     constructor(x, y) {
       var color, dx, dy;
       super();
-      // constants
-      this.size = 8;
       color = Math.floor(Math.random() * 256);
       this.fill = `hsla(${color}, 100%, 50%, 0.25)`;
       this.stroke = `hsla(${color}, 100%, 40%, 1.00)`;
@@ -29,7 +27,7 @@ Boid = (function() {
 
     getNeighborhood() {
       var b, i, len, neighborhood, radius2, ref;
-      radius2 = shared.boidRadius * shared.boidRadius;
+      radius2 = shared.boidViewRadius * shared.boidViewRadius;
       neighborhood = [];
       ref = Boid.all;
       for (i = 0, len = ref.length; i < len; i++) {
@@ -38,6 +36,9 @@ Boid = (function() {
           continue;
         }
         if (Vector2.sqrDistance(this.position, b.position) <= radius2) {
+          if (!this.canSee(b)) {
+            continue;
+          }
           neighborhood.push(b);
         }
       }
@@ -45,9 +46,49 @@ Boid = (function() {
     }
 
     update() {
+      var alignmentForce, avoid, b, center, cohesionForce, count, dist, heading, i, len, offset, offsetToCentre, ref, separationForce;
+      this.acceleration = new Vector2(0, 0);
+      heading = new Vector2(0, 0);
+      avoid = new Vector2(0, 0);
+      center = new Vector2(0, 0);
+      count = 0;
+      ref = Boid.all;
+      for (i = 0, len = ref.length; i < len; i++) {
+        b = ref[i];
+        if (b === this) {
+          continue;
+        }
+        offset = Vector2.subtract(b.position, this.position);
+        dist = Vector2.sqrDistance(b.position, this.position);
+        if (dist < (shared.boidViewRadius * shared.boidViewRadius)) {
+          if (!this.canSee(b)) {
+            continue;
+          }
+          count += 1;
+          heading.add(b.forward);
+          center.add(b.position);
+          if (dist < (shared.boidAvoidanceDist * shared.boidAvoidanceDist)) {
+            avoid.subtract(offset.multiply(1 / dist));
+          }
+        }
+      }
+      if (count !== 0) {
+        offsetToCentre = Vector2.subtract(center.divide(count), this.position);
+        alignmentForce = this.steerTowards(heading.divide(count)).multiply(shared.boidAlignmentWeight);
+        cohesionForce = this.steerTowards(offsetToCentre).multiply(shared.boidCohesionWeight);
+        separationForce = this.steerTowards(avoid).multiply(shared.boidSeparationWeight);
+        if (shared.boidUseAlignmentForce) {
+          this.applyForce(alignmentForce);
+        }
+        if (shared.boidUseCohesionForce) {
+          this.applyForce(cohesionForce);
+        }
+        if (shared.boidUseSeparationForce) {
+          this.applyForce(separationForce);
+        }
+      }
       this.physics();
       this.wrap();
-      this.flock();
     }
 
     render(ctx) {
@@ -69,69 +110,6 @@ Boid = (function() {
       ctx.fill();
       ctx.stroke();
       ctx.restore();
-    }
-
-    flock() {
-      var neighborhood;
-      neighborhood = this.getNeighborhood();
-      if (neighborhood.length === 0) {
-        return;
-      }
-      this.applyForce(this.separation(neighborhood).multiply(shared.separationForce));
-      this.applyForce(this.alignment(neighborhood).multiply(shared.alignmentForce));
-      this.applyForce(this.cohesion(neighborhood).multiply(shared.cohesionForce));
-    }
-
-    separation(neighborhood) {
-      var average_position, count, dist, i, len, n;
-      count = 0;
-      average_position = new Vector2(0, 0);
-      for (i = 0, len = neighborhood.length; i < len; i++) {
-        n = neighborhood[i];
-        dist = Vector2.distance(this.position, n.position);
-        if (dist < shared.separationDistance) {
-          average_position.add(n.position);
-          count++;
-        }
-      }
-      average_position.divide(count);
-      return Vector2.subtract(this.position, average_position).normalize();
-    }
-
-    alignment(neighborhood) {
-      var average_velocity, i, len, n;
-      average_velocity = new Vector2(0, 0);
-      for (i = 0, len = neighborhood.length; i < len; i++) {
-        n = neighborhood[i];
-        average_velocity.add(n.velocity);
-      }
-      // average_velocity.divide(neighborhood.length)
-      return Vector2.subtract(average_velocity, this.velocity).normalize();
-    }
-
-    cohesion(neighborhood) {
-      var average_position, i, len, n;
-      average_position = new Vector2(0, 0);
-      for (i = 0, len = neighborhood.length; i < len; i++) {
-        n = neighborhood[i];
-        average_position.add(n.position);
-      }
-      average_position.divide(neighborhood.length);
-      return Vector2.subtract(average_position, this.position).normalize();
-    }
-
-    // check for screen wrapping
-    wrap() {
-      if (this.position.x < 0) {
-        this.position.x += canvas.width;
-      } else if (this.position.x > canvas.width) {
-        this.position.x -= canvas.width;
-      }
-      if (this.position.y < 0) {
-        this.position.y += canvas.height;
-      } else if (this.position.y > canvas.height) {
-        this.position.y -= canvas.height;
-      }
     }
 
   };

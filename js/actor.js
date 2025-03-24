@@ -3,15 +3,47 @@ var Actor;
 
 import Vector2 from './vector2.js';
 
+import {
+  shared
+} from './shared.js';
+
 Actor = class Actor {
   constructor(x, y) {
     // constants
     this.max_acceleration = 10;
     this.max_speed = 120;
+    this.fov = Math.PI * 1.5;
     this.position = new Vector2(0, 0);
     this.acceleration = new Vector2(0, 0);
     this.velocity = new Vector2(0, 0);
     this.forward = new Vector2(0, 0);
+  }
+
+  canSee(target) {
+    var cosTheta, dotProduct, toTarget;
+    toTarget = Vector2.subtract(target.position, this.position);
+    cosTheta = Math.cos(this.fov / 2);
+    dotProduct = this.forward.dot(toTarget.normalize());
+    return dotProduct >= cosTheta;
+  }
+
+  steerTowards(target) {
+    var steer;
+    steer = target.normalize().multiply(this.max_speed).subtract(this.velocity);
+    return steer.normalize().multiply(shared.boidMaxSteerForce);
+  }
+
+  wrap() {
+    if (this.position.x < 0) {
+      this.position.x += canvas.width;
+    } else if (this.position.x > canvas.width) {
+      this.position.x -= canvas.width;
+    }
+    if (this.position.y < 0) {
+      this.position.y += canvas.height;
+    } else if (this.position.y > canvas.height) {
+      this.position.y -= canvas.height;
+    }
   }
 
   applyForce(force) {
@@ -23,17 +55,11 @@ Actor = class Actor {
   physics() {
     var delta_time;
     delta_time = 1 / 60;
-    if (this.acceleration.magnitude() > this.max_acceleration) {
-      this.acceleration.normalize().multiply(this.max_acceleration);
-    }
     // integration step
-    this.velocity.add(this.acceleration);
-    if (this.velocity.magnitude() > this.max_speed) {
-      this.velocity.normalize().multiply(this.max_speed);
-    }
+    this.velocity.add(Vector2.multiply(this.acceleration, 1.0));
+    this.velocity.clamp(100, this.max_speed);
     this.position.add(Vector2.multiply(this.velocity, delta_time));
     this.forward = this.velocity.copy().normalize();
-    this.acceleration = new Vector2(0, 0);
   }
 
 };

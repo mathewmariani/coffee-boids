@@ -9,21 +9,29 @@ import GUI from "https://cdn.jsdelivr.net/npm/lil-gui@0.20/+esm";
 
 gui = new GUI();
 
-gui.add(shared, "separationDistance", 0, 100);
-
-gui.add(shared, "alignmentForce", 0, 10);
-
-gui.add(shared, "separationForce", 0, 10);
-
-gui.add(shared, "cohesionForce", 0, 10);
-
-gui.add(shared, "boidCount", 0, 1000, 1);
-
-gui.add(shared, "boidRadius", 0, 100);
-
 gui.add(shared, "drawRadius");
 
 gui.add(shared, "drawNeighbors");
+
+gui.add(shared, "boidUseSeparationForce");
+
+gui.add(shared, "boidUseAlignmentForce");
+
+gui.add(shared, "boidUseCohesionForce");
+
+gui.add(shared, "boidCount", 0, 1000, 1);
+
+gui.add(shared, "boidViewRadius", 0, 100);
+
+gui.add(shared, "boidAvoidanceDist", 0, 100);
+
+gui.add(shared, "boidMaxSteerForce", 0, 10);
+
+gui.add(shared, "boidAlignmentWeight", 0, 10);
+
+gui.add(shared, "boidSeparationWeight", 0, 10);
+
+gui.add(shared, "boidCohesionWeight", 0, 10);
 
 // get canvas
 canvas = document.getElementById("canvas");
@@ -64,7 +72,7 @@ setPopulation = function(size) {
 start = function() {
   var draw;
   draw = function() {
-    var b, boid, j, k, len, len1, n, ref, ref1;
+    var b, boid, dirAngle, halfAngle, j, k, len, len1, n, ref, ref1;
     setPopulation(shared.boidCount);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ref = Boid.all;
@@ -78,12 +86,13 @@ start = function() {
       if (shared.drawRadius) {
         ctx.save();
         ctx.fillStyle = "hsla(0, 0%, 63.53%, 0.25)";
-        ctx.strokeStyle = "hsl(180, 3.7%, 95.29%)";
-        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(b.position.x, b.position.y, shared.boidRadius, 0, 2 * Math.PI, false);
+        ctx.moveTo(b.position.x, b.position.y);
+        halfAngle = b.fov / 2;
+        dirAngle = Math.atan2(b.velocity.y, b.velocity.x); // Forward direction
+        ctx.arc(b.position.x, b.position.y, shared.boidViewRadius, dirAngle - halfAngle, dirAngle + halfAngle, false);
+        ctx.lineTo(b.position.x, b.position.y);
         ctx.fill();
-        ctx.stroke();
         ctx.closePath();
         ctx.restore();
       }
@@ -92,7 +101,7 @@ start = function() {
         for (k = 0, len1 = ref1.length; k < len1; k++) {
           n = ref1[k];
           ctx.save();
-          ctx.strokeStyle = "hsla(0, 100%, 50%, 0.5)";
+          ctx.strokeStyle = "hsl(180, 3.7%, 95.29%)";
           ctx.beginPath();
           ctx.moveTo(b.position.x, b.position.y);
           ctx.lineTo(n.position.x, n.position.y);
